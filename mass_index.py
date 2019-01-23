@@ -90,7 +90,7 @@ def send_hec_raw(datum):
     count_try = 0
 
     if not raw:
-        logger.warning("Try #{}, total error #{}: {} - 0 size file. Skipping. Sleeping for {} seconds.".format(count_try+1, file_path, SLEEP))
+        logger.warning("Try #{}, total error #{}: {} - 0 size file. Skipping. Sleeping for {} seconds.".format(count_try+1, count_error.value, file_path, SLEEP))
         return
     else:
         while True:
