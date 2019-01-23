@@ -35,7 +35,6 @@ class Counter(object):
         return self.val.value
 
 def load_csv():
-    data = []
     logger.info("Loading file list from {}.".format(SAVED_FILE_LIST_PATH))
     with open(SAVED_FILE_LIST_PATH) as csv_file:
         reader = csv.DictReader(csv_file)
@@ -96,7 +95,7 @@ def send_hec_raw(datum):
     else:
         while True:
             if count_error.value > ERROR_LIMIT:
-                logger.error("Over {} total error(s). Script exiting!".format(ERROR_LIMIT))
+                logger.error("Over {} total errors. Script exiting!".format(ERROR_LIMIT))
                 save_and_exit()
 
             try:
@@ -124,7 +123,7 @@ if __name__ == "__main__":
 
     setting_file = Path(os.path.dirname(os.path.realpath(__file__)) + "/settings.py")
 
-    if not setting_file.is_file():
+    if not os.path.exist(setting_file):
         sys.exit("The file settings.py doesn't exist. Please rename settings.py.template to settings.py.")
 
     logger = logging.getLogger("logger")
@@ -145,8 +144,7 @@ if __name__ == "__main__":
     if os.path.exists(SAVED_FILE_LIST_PATH):
         data = load_csv()
     else:
-        logger.info("Saved file list not found. Reading settings.py.")
-        logger.info("Creating file list...")
+        logger.info("Saved file list not found at {}. Creating file list...".format(SAVED_FILE_LIST_PATH))
 
         for i, d in enumerate(DATA):
             path = d["path"]
@@ -156,22 +154,14 @@ if __name__ == "__main__":
             file_paths = glob.glob(path)
             logger.debug("DATA #{}: path={}, index={}, sourcetype={}, len(file_paths)={}.".format(i, path, index, sourcetype, len(file_paths)))
 
-            data.extend([
-                {
-                    "file_path": file_path,
-                    "index": index,
-                    "sourcetype": sourcetype,
-                }
-                for file_path in file_paths
-            ])
+            data.extend(file_paths)
 
-        total = len(data)
-
-        logger.info("File list created. Total of {} file(s).".format(total))
+        logger.info("File list created.")
 
     total = len(data)
 
-    print("Sending files via HEC...")
+    logger.info("Sending {} files via HEC...".format(total))
+    print("Reading files and sending via HEC...")
     print("Press ctrl-c to cancel and save remaining file list.")
 
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
