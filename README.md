@@ -19,17 +19,17 @@ This Python script uses multiprocessing to send the raw text from files via Splu
 Log file at /mnt/data/mass_index.log.
 Reading files and sending via HEC...
 Press ctrl-c to cancel and save remaining file list.
- 55%|█████████████████████████████▋                        | 283097/515787 [3:14:00<2:10:38, 29.69it/s]
+ 97%|█████████████████████████████████████████████████████▏ | 3027986/3134390 [9:57:24<17:50, 99.37it/s]
 ```
 
 ### How to read the `tqdm` progress bar
 Using the example right above:
 
-* `55%`: Percent completion rate.
-* `283097/515787`: 283097 files copied out of 515787 files.
-* `3:14:00`: Elapsed time (in this case, 3 hours and 14 minutes).
-* `2:10:38`: Estimated time left (in this case, about 2 hours and 10 minutes left).
-* `29.69it/s`: About 29 files copied per second.
+* `97%`: Percent completion rate.
+* `3027986/3134390`: 3027986 files sent out of 3134390 files.
+* `9:57:24`: Elapsed time (in this case, 9 hours and 57 minutes).
+* `17:50`: Estimated time left (in this case, about 17 minutes left).
+* `99.37it/s`: About 99 files copied per second.
 
 ### Other considerations
 1. `indexes.conf`: You probably want to use `maxDataSize=auto_high_volume` if you're ingesting over 10 GB+ of data. Otherwise Splunk might complain about too many rolling buckets.
