@@ -154,7 +154,14 @@ if __name__ == "__main__":
             file_paths = glob.glob(path)
             logger.debug("DATA #{}: path={}, index={}, sourcetype={}, len(file_paths)={}.".format(i, path, index, sourcetype, len(file_paths)))
 
-            data.extend(file_paths)
+            data.extend([
+                {
+                    "file_path": file_path,
+                    "index": index,
+                    "sourcetype": sourcetype,
+                }
+                for file_path in file_paths
+            ])
 
         logger.info("File list created.")
 
