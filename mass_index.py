@@ -123,7 +123,7 @@ if __name__ == "__main__":
 
     setting_file = Path(os.path.dirname(os.path.realpath(__file__)) + "/settings.py")
 
-    if not os.path.exist(setting_file):
+    if not os.path.exists(setting_file):
         sys.exit("The file settings.py doesn't exist. Please rename settings.py.template to settings.py.")
 
     logger = logging.getLogger("logger")
