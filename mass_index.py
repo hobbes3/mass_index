@@ -16,6 +16,7 @@ from pathlib import Path
 from shutil import copy2
 from multiprocessing import RawValue, Lock
 from multiprocessing.dummy import Pool
+from threading import Lock
 
 from settings import *
 
@@ -34,6 +35,7 @@ class Counter(object):
         return self.val.value
 
 def load_csv():
+    data = []
     logger.info("Loading file list from {}.".format(SAVED_FILE_LIST_PATH))
     with open(SAVED_FILE_LIST_PATH) as csv_file:
         reader = csv.DictReader(csv_file)
@@ -43,20 +45,23 @@ def load_csv():
     logger.info("File list loaded (length={}).".format(len(data)))
     print("Loaded saved file list at {}.".format(SAVED_FILE_LIST_PATH))
 
-def save_csv():
-    logger.info("Saving remaining file list (length={}) as {}.".format(len(data), SAVED_FILE_LIST_PATH))
-    with open(SAVED_FILE_LIST_PATH, "w") as csv_file:
-        fields = ["file_path", "index", "sourcetype"]
-        writer = csv.DictWriter(csv_file, fieldnames=fields)
-        writer.writeheader()
-        writer.writerows(data)
-    csv_file.close()
+    return data
 
 def save_and_exit():
-    if data:
-        save_csv()
-    logger.warning("Thread exited. Incomplete file list saved.".format(LOG_PATH))
-    os._exit(1)
+    with lock:
+        logger.info("Saving remaining file list (length={}) as {}...".format(len(data), SAVED_FILE_LIST_PATH))
+
+        with open(SAVED_FILE_LIST_PATH, "w") as csv_file:
+            fields = ["file_path", "index", "sourcetype"]
+            writer = csv.DictWriter(csv_file, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(data)
+        csv_file.close()
+
+        logger.info("Remaining file list (length={}) saved as {}.".format(len(data), SAVED_FILE_LIST_PATH))
+        print("File list saved.")
+        logger.info("INCOMPLETE. Total elapsed seconds: {}.".format(time.time() - start_time))
+        os._exit(1)
 
 def delete_csv():
     logger.info("DONE. Deleting {}.".format(SAVED_FILE_LIST_PATH))
@@ -86,13 +91,13 @@ def send_hec_raw(datum):
     count_try = 0
 
     if not raw:
-        logger.warning("Try #{}, total error #{}: {} - 0 size file. Skipping.".format(count_try+1, file_path))
+        logger.warning("Try #{}, total error #{}: {} - 0 size file. Skipping. Sleeping for {} seconds.".format(count_try+1, file_path, SLEEP))
         return
     else:
         while True:
             if count_error.value > ERROR_LIMIT:
                 logger.error("Over {} total error(s). Script exiting!".format(ERROR_LIMIT))
-                os._exit(1)
+                save_and_exit()
 
             try:
                 r = requests.post(url, headers=headers, params=params, data=raw.encode("utf-8"), verify=False, timeout=TIMEOUT)
@@ -106,9 +111,9 @@ def send_hec_raw(datum):
                 pass
             except:
                 logger.fatal("{}. Script exiting!".format(sys.exc_info()[0]))
-                os._exit(1)
+                save_and_exit()
             else:
-                logger.info("Try #{}, total error #{}: {} - Successfully sent.".format(count_try+1, count_error.value, file_path))
+                logger.info("Try #{}, total error #{}: {} - Successfully sent. Sleeping for {} seconds(s).".format(count_try+1, count_error.value, file_path, SLEEP))
                 data.remove(datum)
                 break
 
@@ -138,7 +143,7 @@ if __name__ == "__main__":
     count_error = Counter(0)
 
     if os.path.exists(SAVED_FILE_LIST_PATH):
-        load_csv()
+        data = load_csv()
     else:
         logger.info("Saved file list not found. Reading settings.py.")
         logger.info("Creating file list...")
@@ -167,16 +172,24 @@ if __name__ == "__main__":
     total = len(data)
 
     print("Sending files via HEC...")
+    print("Press ctrl-c to cancel and save remaining file list.")
 
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
     pool = Pool(THREADS)
+    lock = Lock()
 
-    for _ in tqdm(pool.imap_unordered(send_hec_raw, data), total=total):
-        pass
+    try:
+        for _ in tqdm(pool.imap_unordered(send_hec_raw, data), total=total):
+            pass
 
-    pool.close()
-    pool.join()
+        pool.close()
+        pool.join()
+    except KeyboardInterrupt:
+        print("\nCaught KeyboardInterrupt! Terminating workers and saving remaining file list. Please wait...")
+        pool.terminate()
+        pool.join()
+        save_and_exit()
 
     if os.path.exists(SAVED_FILE_LIST_PATH):
         delete_csv()
