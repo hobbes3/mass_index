@@ -57,7 +57,7 @@ def save_and_exit():
             writer.writerows(data)
         csv_file.close()
 
-        logger.info("Remaining file list (length={}) saved as {}.".format(len(data), SAVED_FILE_LIST_PATH))
+        logger.info("{} saved.".format(len(data), SAVED_FILE_LIST_PATH))
         print("File list saved.")
         logger.info("INCOMPLETE. Total elapsed seconds: {}.".format(time.time() - start_time))
         os._exit(1)
@@ -79,10 +79,11 @@ def send_hec_raw(datum):
     headers = {
         "Authorization": "Splunk " + HEC_TOKEN
     }
+
     params = {
         "index": index,
         "sourcetype": sourcetype,
-        "source": SOURCE_PREFIX + os.path.split(file_path)[1],
+        "source": SOURCE_PREFIX + (file_path if SOURCE_FULL_PATH else os.path.split(file_path)[1]),
     }
 
     raw = file_get_text(file_path)
@@ -94,8 +95,8 @@ def send_hec_raw(datum):
         return
     else:
         while True:
-            if count_error.value > ERROR_LIMIT:
-                logger.error("Over {} total errors. Script exiting!".format(ERROR_LIMIT))
+            if count_error.value > count_total_errors:
+                logger.error("Over {} total errors. Script exiting!".format(count_total_errors))
                 save_and_exit()
 
             try:
@@ -165,9 +166,11 @@ if __name__ == "__main__":
 
         logger.info("File list created.")
 
-    total = len(data)
+    count_total_files = len(data)
+    count_total_errors = count_total_files * THREADS * ERROR_LIMIT_PCT
+    logger.debug("Total errors allowed: {}={} * {} * {} (total_errors = total_files * THREADS * ERROR_LIMIT_PCT).".format(count_total_errors, count_total_files, THREADS, ERROR_LIMIT_PCT))
 
-    logger.info("Sending {} files via HEC...".format(total))
+    logger.info("Sending {} files via HEC...".format(count_total_files))
     print("Reading files and sending via HEC...")
     print("Press ctrl-c to cancel and save remaining file list.")
 
@@ -177,7 +180,7 @@ if __name__ == "__main__":
     lock = Lock()
 
     try:
-        for _ in tqdm(pool.imap_unordered(send_hec_raw, data), total=total):
+        for _ in tqdm(pool.imap_unordered(send_hec_raw, data), total=count_total_files):
             pass
 
         pool.close()
