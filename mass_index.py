@@ -66,7 +66,7 @@ def send_hec_raw(datum):
         "source": SOURCE_PREFIX + (file_path if SOURCE_FULL_PATH else os.path.split(file_path)[1]),
     }
 
-    f = io.open(file_name, mode="r", encoding="utf-8")
+    f = io.open(file_path, mode="r", encoding="utf-8")
     raw = f.read()
 
     count_try = 0
@@ -117,34 +117,22 @@ if __name__ == "__main__":
     print("Log file at {}.".format(LOG_PATH))
 
     logger.info("===START OF SCRIPT===")
-    logger.debug("From settings.py: " +
-        "URL={}, " +
-        "THREADS={}, " +
-        "SLEEP={}, " +
-        "TIMEOUT={}, " +
-        "TRY_SLEEP={}, " +
-        "ERROR_LIMIT_PCT={}, " +
-        "SAVED_FILE_LIST_PATH={}, " +
-        "SOURCE_PREFIX={}, " +
-        "SOURCE_FULL_PATH={}, " +
-        "LOG_PATH={}, " +
-        "LOG_ROTATION_BYTES={}, " +
-        "LOG_ROTATION_LIMIT={}, " +
-        "DATA={}.".format(
-            URL,
-            THREADS,
-            SLEEP,
-            TIMEOUT,
-            TRY_SLEEP,
-            ERROR_LIMIT_PCT,
-            SAVED_FILE_LIST_PATH,
-            SOURCE_PREFIX,
-            SOURCE_FULL_PATH,
-            LOG_PATH,
-            LOG_ROTATION_BYTES,
-            LOG_ROTATION_LIMIT,
-            DATA
-    ))
+    logger.debug(
+        "From settings.py: " +
+        "URL={}, ".format(URL) +
+        "THREADS={}, ".format(THREADS) +
+        "SLEEP={}, ".format(SLEEP) +
+        "TIMEOUT={}, ".format(TIMEOUT) +
+        "TRY_SLEEP={}, ".format(TRY_SLEEP) +
+        "ERROR_LIMIT_PCT={}, ".format(ERROR_LIMIT_PCT) +
+        "SAVED_FILE_LIST_PATH={}, ".format(SAVED_FILE_LIST_PATH) +
+        "SOURCE_PREFIX={}, ".format(SOURCE_PREFIX) +
+        "SOURCE_FULL_PATH={}, ".format(SOURCE_FULL_PATH) +
+        "LOG_PATH={}, ".format(LOG_PATH) +
+        "LOG_ROTATION_BYTES={}, ".format(LOG_ROTATION_BYTES) +
+        "LOG_ROTATION_LIMIT={}, ".format(LOG_ROTATION_LIMIT) +
+        "DATA={}.".format(DATA)
+    )
 
     data = []
 
