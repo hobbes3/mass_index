@@ -106,7 +106,7 @@ if __name__ == "__main__":
     setting_file = Path(os.path.dirname(os.path.realpath(__file__)) + "/settings.py")
 
     if not os.path.exists(setting_file):
-        sys.exit("The file settings.py doesn't exist. Please rename settings.py.template to settings.py.")
+        sys.exit("The config file, settings.py, doesn't exist! Please copy, edit, and rename default_settings.py to settings.py.")
 
     logger = logging.getLogger("logger")
     logger.setLevel(logging.DEBUG)
@@ -140,15 +140,18 @@ if __name__ == "__main__":
 
     if os.path.exists(SAVED_FILE_LIST_PATH):
         logger.info("Saved file list found at {}. Loading file list...".format(SAVED_FILE_LIST_PATH))
+        print("Saved file list found at {}. Loading file list...".format(SAVED_FILE_LIST_PATH))
+
         with open(SAVED_FILE_LIST_PATH) as csv_file:
             reader = csv.DictReader(csv_file)
             for r in reader:
                 data.append(r)
 
-        print("Loaded saved file list at {}.".format(SAVED_FILE_LIST_PATH))
         logger.info("File list loaded.")
+        print("File list loaded.")
     else:
         logger.info("Saved file list not found at {}. Creating file list...".format(SAVED_FILE_LIST_PATH))
+        print("Saved file list not found at {}. Creating file list...".format(SAVED_FILE_LIST_PATH))
 
         for i, d in enumerate(DATA):
             path = d["path"]
@@ -168,13 +171,14 @@ if __name__ == "__main__":
             ])
 
         logger.info("File list created.")
+        print("File list created.")
 
     count_total_files = len(data)
     count_total_errors = count_total_files * THREADS * ERROR_LIMIT_PCT
     logger.debug("Total errors allowed: {}={} * {} * {} (total_errors = total_files * THREADS * ERROR_LIMIT_PCT).".format(count_total_errors, count_total_files, THREADS, ERROR_LIMIT_PCT))
 
     logger.info("Sending {} files via HEC...".format(count_total_files))
-    print("Reading file list and sending files via HEC...")
+    print("Sending {} files via HEC...".format(count_total_files))
     print("Press ctrl-c to cancel and save remaining file list.")
 
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -190,6 +194,7 @@ if __name__ == "__main__":
         pool.join()
     except KeyboardInterrupt:
         print("\nCaught KeyboardInterrupt! Terminating workers and saving remaining file list. Please wait...")
+        logger.warning("Caught KeyboardInterrupt!") 
         pool.terminate()
         pool.join()
         save_and_exit()
