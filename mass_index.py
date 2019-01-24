@@ -34,18 +34,6 @@ class Counter(object):
     def value(self):
         return self.val.value
 
-def load_csv():
-    logger.info("Loading file list from {}.".format(SAVED_FILE_LIST_PATH))
-    with open(SAVED_FILE_LIST_PATH) as csv_file:
-        reader = csv.DictReader(csv_file)
-        for r in reader:
-            data.append(r)
-
-    logger.info("File list loaded (length={}).".format(len(data)))
-    print("Loaded saved file list at {}.".format(SAVED_FILE_LIST_PATH))
-
-    return data
-
 def save_and_exit():
     with lock:
         logger.info("Saving remaining file list (length={}) as {}...".format(len(data), SAVED_FILE_LIST_PATH))
@@ -61,14 +49,6 @@ def save_and_exit():
         print("File list saved.")
         logger.info("INCOMPLETE. Total elapsed seconds: {}.".format(time.time() - start_time))
         os._exit(1)
-
-def delete_csv():
-    logger.info("DONE. Deleting {}.".format(SAVED_FILE_LIST_PATH))
-    os.remove(SAVED_FILE_LIST_PATH)
-
-def file_get_text(file_name):
-    f = io.open(file_name, mode="r", encoding="utf-8")
-    return f.read()
 
 def send_hec_raw(datum):
     file_path = datum["file_path"]
@@ -86,7 +66,8 @@ def send_hec_raw(datum):
         "source": SOURCE_PREFIX + (file_path if SOURCE_FULL_PATH else os.path.split(file_path)[1]),
     }
 
-    raw = file_get_text(file_path)
+    f = io.open(file_name, mode="r", encoding="utf-8")
+    raw = f.read()
 
     count_try = 0
 
@@ -136,14 +117,48 @@ if __name__ == "__main__":
     print("Log file at {}.".format(LOG_PATH))
 
     logger.info("===START OF SCRIPT===")
-    logger.debug("From settings.py: SLEEP={}, len(DATA)={}.".format(SLEEP, len(DATA)))
+    logger.debug("From settings.py: " +
+        "URL={}, " +
+        "THREADS={}, " +
+        "SLEEP={}, " +
+        "TIMEOUT={}, " +
+        "TRY_SLEEP={}, " +
+        "ERROR_LIMIT_PCT={}, " +
+        "SAVED_FILE_LIST_PATH={}, " +
+        "SOURCE_PREFIX={}, " +
+        "SOURCE_FULL_PATH={}, " +
+        "LOG_PATH={}, " +
+        "LOG_ROTATION_BYTES={}, " +
+        "LOG_ROTATION_LIMIT={}, " +
+        "DATA={}.".format(
+            URL,
+            THREADS,
+            SLEEP,
+            TIMEOUT,
+            TRY_SLEEP,
+            ERROR_LIMIT_PCT,
+            SAVED_FILE_LIST_PATH,
+            SOURCE_PREFIX,
+            SOURCE_FULL_PATH,
+            LOG_PATH,
+            LOG_ROTATION_BYTES,
+            LOG_ROTATION_LIMIT,
+            DATA
+    ))
 
     data = []
 
     count_error = Counter(0)
 
     if os.path.exists(SAVED_FILE_LIST_PATH):
-        data = load_csv()
+        logger.info("Saved file list found at {}. Loading file list...".format(SAVED_FILE_LIST_PATH))
+        with open(SAVED_FILE_LIST_PATH) as csv_file:
+            reader = csv.DictReader(csv_file)
+            for r in reader:
+                data.append(r)
+
+        print("Loaded saved file list at {}.".format(SAVED_FILE_LIST_PATH))
+        logger.info("File list loaded.")
     else:
         logger.info("Saved file list not found at {}. Creating file list...".format(SAVED_FILE_LIST_PATH))
 
@@ -171,7 +186,7 @@ if __name__ == "__main__":
     logger.debug("Total errors allowed: {}={} * {} * {} (total_errors = total_files * THREADS * ERROR_LIMIT_PCT).".format(count_total_errors, count_total_files, THREADS, ERROR_LIMIT_PCT))
 
     logger.info("Sending {} files via HEC...".format(count_total_files))
-    print("Reading files and sending via HEC...")
+    print("Reading file list and sending files via HEC...")
     print("Press ctrl-c to cancel and save remaining file list.")
 
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -192,7 +207,8 @@ if __name__ == "__main__":
         save_and_exit()
 
     if os.path.exists(SAVED_FILE_LIST_PATH):
-        delete_csv()
+        logger.info("DONE. Deleting {}.".format(SAVED_FILE_LIST_PATH))
+        os.remove(SAVED_FILE_LIST_PATH)
 
     logger.info("DONE. Total elapsed seconds: {}.".format(time.time() - start_time))
     print("Done!")

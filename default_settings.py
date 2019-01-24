@@ -20,7 +20,7 @@ TRY_SLEEP = [1, 5, 10, 30, 60]
 # The formula is
 #     total_errors = total_files * THREADS * ERROR_LIMIT_PCT
 # This is to prevent the script from hanging forever if Splunk is down or unresponsive.
-ERROR_LIMIT_PCT = 0.05
+ERROR_LIMIT_PCT = 0.01
 
 SAVED_FILE_LIST_PATH = "/mnt/data/samples/mass_index_saved_file_list.csv"
 
