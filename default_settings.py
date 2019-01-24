@@ -1,7 +1,7 @@
 # Copy and rename this file to settings.py to be in effect.
 
 URL = "https://localhost:8088"
-HEC_TOKEN = "b71b8557-2286-4222-97d2-2940c003a763"
+HEC_TOKEN = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 
 THREADS = 8
 
