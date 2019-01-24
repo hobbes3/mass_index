@@ -39,13 +39,14 @@ Using the example right above:
 
 ```
 | tstats count where index=foo sourcetype=bar by source
+| eval source=replace(source, "hec::", "")
 | eval src="splunk"
 | inputlookup append=t file_list_on_disk.csv
 | eval src=coalesce(src, "disk")
 | stats count values(src) as src first(size) as size by source
 | where count=1
 ```
-5. `settings.py`: `ERROR_LIMIT` should be a percentage of the total files.
+5. `settings.py`: You can increase or decrease the speed of the script by adjust `THREADS` and `SLEEP` depending on how many `ERROR` lines you see in `mass_index.py`. You can also increase `ERROR_LIMIT_PCT` if you want to the script to keep trying even if Splunk complains or timeouts.
 
 ### Performance references
 Indexing tested on EC2 `c4.8xlarge` (36 vCPU, 30 GB memory):
