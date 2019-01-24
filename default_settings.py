@@ -22,7 +22,7 @@ TRY_SLEEP = [1, 5, 10, 30, 60]
 # This is to prevent the script from hanging forever if Splunk is down or unresponsive.
 ERROR_LIMIT_PCT = 0.01
 
-SAVED_FILE_LIST_PATH = "/mnt/data/samples/mass_index_saved_file_list.csv"
+SAVED_FILE_LIST_PATH = "/path/to/mass_index_saved_file_list.csv"
 
 # The script overrides Splunk's default source for HEC with this prefix and the filename.
 # Change this to an empty string "" if you don't want the prefix.
@@ -30,7 +30,7 @@ SOURCE_PREFIX = "hec::"
 # If set to False, then it will only include the filename (and the SOURCE_PREFIX).
 SOURCE_FULL_PATH = True
 
-LOG_PATH = "/mnt/data/samples/mass_index.log"
+LOG_PATH = "/path/to/mass_index.log"
 # Size of each log file.
 # 1 MB = 1 * 1024 * 1024
 LOG_ROTATION_BYTES = 25 * 1024 * 1024
