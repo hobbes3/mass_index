@@ -200,8 +200,8 @@ if __name__ == "__main__":
         save_and_exit()
 
     if os.path.exists(SAVED_FILE_LIST_PATH):
-        logger.info("DONE. Deleting {}.".format(SAVED_FILE_LIST_PATH))
         os.remove(SAVED_FILE_LIST_PATH)
+        logger.info("All files sent. {} deleted.".format(SAVED_FILE_LIST_PATH))
 
     logger.info("DONE. Total elapsed seconds: {}.".format(time.time() - start_time))
     print("Done!")
